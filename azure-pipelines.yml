@@ -48,7 +48,7 @@ stages:
 
     
     - script: |
-          az aks get-credentials --resource-group terraform-aks --name aks --overwrite-existing
+          az aks get-credentials --resource-group Final-Project --name aks --overwrite-existing
       displayName: 'Get AKS Cluster Credentials'
       
     - script: |
