@@ -1,5 +1,5 @@
 resource "azurerm_resource_group" "rg" {
-  name     = "Mini-Project"
+  name     = "Final-Project"
   location = "eastus"
 }
 
@@ -21,25 +21,5 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   tags = {
     Environment = "Production"
-  }
-}
-
-resource "null_resource" "apply_manifests" {
-  depends_on = [azurerm_kubernetes_cluster.aks]
-
-  provisioner "local-exec" {
-    command     = "kubectl apply -f /home/ubuntu/webapp/deployments"
-    working_dir = "/home/ubuntu/webapp"
-  }
-}
-
-resource "null_resource" "kubeconfig" {
-  depends_on = [azurerm_kubernetes_cluster.aks]
-
-  provisioner "local-exec" {
-    command = <<EOT
-      mkdir -p ~/.kube
-      az aks get-credentials --name ${azurerm_kubernetes_cluster.aks.name} --resource-group ${azurerm_resource_group.rg.name}
-    EOT
   }
 }
