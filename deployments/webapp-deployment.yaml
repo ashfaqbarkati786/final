@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp-container
+          image: ashfaqbarkati786/flask1:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: r4nd0mR00tP4ssw0rd
+            - name: MYSQL_HOST
+              value: db-service
+            - name: MYSQL_USER
+              value: randomuser
+            - name: MYSQL_PASSWORD
+              value: r4nd0mP4ssw0rd
+            - name: MYSQL_DATABASE
+              value: sampledb
+          

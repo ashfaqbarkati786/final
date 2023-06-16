@@ -1,0 +1,44 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: default
+
+variables:
+  majorVersion: 1
+  minorVersion: $[counter(variables['majorVersion'], 0)]
+  patchVersion: $[counter(variables['minorVersion'], 0)]
+
+stages:
+- stage: Build
+  displayName: 'Build Docker image'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build and Push'
+    steps:
+    - checkout: self
+    
+    - task: CmdLine@2
+      displayName: 'Docker Build'
+      inputs:
+        script: |
+          docker build -f $(Build.SourcesDirectory)/Dockerfile -t ashfaqbarkati786/flask $(Build.SourcesDirectory)
+    
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'yes'
+        command: 'login'
+    
+    - task: CmdLine@2
+      displayName: 'Docker Tag'
+      inputs:
+        script: |
+          docker tag ashfaqbarkati786/flask ashfaqbarkati786/flask:$(majorVersion).$(minorVersion).$(patchVersion)
+    
+    - task: CmdLine@2
+      displayName: 'Docker Push'
+      inputs:
+        script: |
+          sudo docker push ashfaqbarkati786/flask:$(majorVersion).$(minorVersion).$(patchVersion)
