@@ -1,15 +1,10 @@
 trigger:
   branches:
     include:
-      - main
+      - master
 
 pool:
   name: default
-
-variables:
-  majorVersion: 1
-  minorVersion: $[counter(variables['majorVersion'], 0)]
-  patchVersion: $[counter(variables['minorVersion'], 0)]
 
 stages:
 - stage: Build
@@ -20,25 +15,49 @@ stages:
     steps:
     - checkout: self
     
-    - task: CmdLine@2
-      displayName: 'Docker Build'
-      inputs:
-        script: |
-          docker build -f $(Build.SourcesDirectory)/Dockerfile -t ashfaqbarkati786/flask $(Build.SourcesDirectory)
-    
     - task: Docker@2
       inputs:
-        containerRegistry: 'yes'
-        command: 'login'
+        containerRegistry: 'docker'
+        repository: 'ashfaqbarkati786/flask1'
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        tags: 'latest'
+    - script: |
+               sudo docker push ashfaqbarkati786/flask1
+      displayName: 'Run Command on Self-Hosted Agent'
     
+
+- stage: Deploy
+  displayName: 'Deploy Infrastructure'
+  dependsOn: Build
+  jobs:
+  - job: TerraformJob
+    displayName: 'Terraform Deployment'
+    steps:
+    - checkout: self
+
     - task: CmdLine@2
-      displayName: 'Docker Tag'
+      displayName: 'Run Terraform'
       inputs:
         script: |
-          docker tag ashfaqbarkati786/flask ashfaqbarkati786/flask:$(majorVersion).$(minorVersion).$(patchVersion)
+          cd $(Build.SourcesDirectory)/terraformfiles  
+          terraform init    
+          terraform plan
+          terraform apply -auto-approve
+
+
     
-    - task: CmdLine@2
-      displayName: 'Docker Push'
-      inputs:
-        script: |
-          sudo docker push ashfaqbarkati786/flask:$(majorVersion).$(minorVersion).$(patchVersion)
+    - script: |
+          az aks get-credentials --resource-group terraform-aks --name aks --overwrite-existing
+      displayName: 'Get AKS Cluster Credentials'
+      
+    - script: |
+        kubectl get nodes
+      displayName: 'Verify AKS Cluster Connection'
+
+    - checkout: self
+      displayName: 'Checkout GitHub Repository'
+
+    - script: |
+        kubectl apply -f deployments/
+      displayName: 'Deploy to AKS Cluster'
