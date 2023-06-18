@@ -18,7 +18,7 @@ stages:
     - task: Docker@2
       inputs:
         containerRegistry: 'docker'
-        repository: 'ashfaqbarkati786/flask1'
+        repository: 'ashfaqbarkati787/flask1'
         command: 'build'
         Dockerfile: '**/Dockerfile'
         tags: 'latest'
